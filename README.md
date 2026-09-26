@@ -24,6 +24,24 @@ with torch.inference_mode():
 
 ```
 
-## Color transfer
 
+## Darker and thinner
+Refer to the source code for the range of the arguments
+
+```python
+import numpy as np
+import torch
+from torch import Tensor
+from darker_thinner import DarkerThinner
+
+in_tensor: Tensor
+ref_tensor: Tensor
+
+darker_thinner_module = DarkerThinner(strength=0.6, thin=0.4)
+darker_thinner_module = darker_thinner_module.to(device=device)
+with torch.inference_mode():
+    d_out: Tensor = darker_thinner_module(in_tensor, ref_tensor)
+    d_out = torch.clamp(d_out, 0., 1.)
+
+```
 
