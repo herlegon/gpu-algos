@@ -7,38 +7,38 @@ from torch import Tensor
 from typing import Self
 
 
-class DarkerThinner(nn.Module):
+class DarkerThinnerLines(nn.Module):
     def __init__(
         self,
-        strength: float = 0.6,
-        thin: float = 0.4,
+        darken: float = 0.6,
+        thin: float = 0.3,
+        luma_min: float = 0.02,
         luma_max: float = 0.75,
-        threshold: float = 0.016,
-        minimum: float = 0.02,
+        min_change: float = 0.016,
     ):
-        """Make lines darker and thinner
+        """Makes lines darker and thinner
         The input tensor must be in float format (float32 or float16).
 
         Args:
-            - strength: strength used to darken. Disabled when strength is equal to 0.
+            - darken: strength used to darken. Disabled when strength is equal to 0.
                     Recommended values: [0.1 .. 2.0]
             - thin: strenght used to thinner lines.
                     High values may create artifacts around the lines.
                     Disabled when strength is equal to 0.
                     Recommended values: [0 .. 0.8]
+            - luma_min: do not darken lines below this threshold.
+                    Recommended range: [0 .. 0.20]
             - luma_max: do not darken pixels whose Y value is higher that this value.
                     Recommended range: [0.5 .. 1.0]
-            - threshold: if the modification of the luma value is less than this this range,
+            - min_change: if the modification of the luma value is less than this this range,
                     a pixel won't be modified. Recommended range: [0.01 .. 0.03]
-            - minimum: do not darken lines below this threshold.
-                    Recommended range: [0 .. 0.20]
         """
         # Some parts inspired by http://avisynth.nl/index.php/External_filters#Line_Darkening
-        super(DarkerThinner, self).__init__()
-        self.minimum = minimum
+        super(DarkerThinnerLines, self).__init__()
+        self.minimum = luma_min
         self.luma_max = luma_max
-        self.threshold = threshold
-        self.strength = strength
+        self.threshold = min_change
+        self.darken = darken
         self.thin = thin
 
         dtype: torch.dtype = torch.float32
@@ -113,7 +113,7 @@ class DarkerThinner(nn.Module):
     def morph_close(
         self,
         tensor: Tensor,
-        kernel_size: int | tuple[int, int] = 3,
+        kernel_size: int = 3,
         iterations: int = 1
     ) -> Tensor:
         max_pool = nn.MaxPool2d(kernel_size=kernel_size, stride=1, padding=kernel_size // 2)
@@ -153,7 +153,7 @@ class DarkerThinner(nn.Module):
         )
         mask_lines: Tensor = mask_clamped - yp
         lines: Tensor = torch.where(mask_lines > self.threshold, mask_lines, 0)
-        darker_lines = lines * self.strength
+        darker_lines = lines * self.darken
         out_yp = torch.clamp(yp - darker_lines, 0, 1)
 
         if self.thin <= 0:
@@ -187,11 +187,11 @@ class DarkerThinner(nn.Module):
 
 def darker_thinner(
     img: np.ndarray,
-    strength: float = 0.6,
+    darken: float = 0.6,
     thin: float = 0.4,
+    luma_min: float = 0.02,
     luma_max: float = 0.75,
-    threshold: float = 0.016,
-    minimum: float = 0.02,
+    min_change: float = 0.016,
 ):
     yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
     yp = yuv[:, :, 0]
@@ -205,16 +205,16 @@ def darker_thinner(
         iterations=3
     )
     mask = cv2.resize(mask, (w, h), interpolation=cv2.INTER_CUBIC)
-    mask = np.where(mask < minimum, yp, mask)
+    mask = np.where(mask < luma_min, yp, mask)
 
     mask_clamped = np.minimum(mask, luma_max)
     mask_lines = mask_clamped - yp
-    lines = np.where(mask_lines > threshold, mask_lines, 0)
-    darker_lines = lines * strength
+    lines = np.where(mask_lines > min_change, mask_lines, 0)
+    darker_lines = lines * darken
     out_yp = np.clip(yp - darker_lines, 0, 1)
 
     if thin > 0:
-        lines = np.where(lines > threshold, 2 * lines, 0)
+        lines = np.where(lines > min_change, 2 * lines, 0)
         lines_morph: np.ndarray = cv2.morphologyEx(
             lines,
             cv2.MORPH_DILATE,
