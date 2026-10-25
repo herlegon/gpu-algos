@@ -19,6 +19,8 @@ from denc import (
     EncoderThread,
     ProgressThread,
     Device,
+    add_io_arguments,
+    add_debug_arguments,
 )
 
 from hsys import (
@@ -33,14 +35,11 @@ def main():
     dlogger.setLevel(logging.INFO)
 
     parser = ArgumentParser()
-    parser.add_argument("--input", "-i", type=str, default=f"in.mkv", required=False, help="Input video file.")
+    add_io_arguments(parser)
     parser.add_argument("--darken", type=float, default=0.6, required=False, help="Darkening strength. Set to `0` to disable.")
     parser.add_argument("--thin", type=float, default=0.3, required=False, help="Line thinning strength. Set to `0` to disable. High values may create artifacts.")
-    parser.add_argument("--output", "-o", type=str, default="", required=False, help="Output video file. If empty, the name is generated from the input file name.")
-    parser.add_argument("--out_dir", type=str, default="", required=False, help="Output directory. If empty, the input file's directory is used.")
-    parser.add_argument("--append_params", action="store_true", required=False, help="Append the parameters (`darken`, `thin`) to the output file name.")
     parser.add_argument("--cpu", action="store_true", required=False, help="Run on CPU instead of GPU (slower).")
-    parser.add_argument("--debug", action="store_true", required=False, help="Enable verbose output for debugging.")
+    add_debug_arguments(parser)
     args = parser.parse_args()
     debug: bool = args.debug
     if debug:
