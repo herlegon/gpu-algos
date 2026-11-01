@@ -1,0 +1,62 @@
+[project]
+name = "gpu-algos"
+version = "0.1"
+authors = [
+    {name = "Jep Etau", email = "jep.etau@gmail.com"},
+]
+description = "GPU algos"
+readme = "README.md"
+requires-python = ">= 3.14"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.14",
+]
+keywords = ["cuda"]
+dependencies = [
+    # requirements-common.txt
+    "numpy>=2.2.6",
+    "opencv-python>=4.12",
+    "hytils",
+    "hsys",
+    "hinstall",
+]
+
+[project.optional-dependencies]
+# pip install .[release]
+release = [
+    "hytils @ git+https://github.com/herlegon/hytils.git",
+    "hsys @ git+https://github.com/herlegon/hsys.git",
+    "hinstall @ git+https://github.com/herlegon/hinstall.git",
+]
+# pip install -e .[dev]  +  pip install -e ../hytils ../hsys ../hinstall
+dev = [
+    "hytils",
+    "hsys",
+    "hinstall",
+]
+
+[project.urls]
+Homepage = "https://github.com/herlegon/gpu-algos"
+Documentation = "https://github.com/herlegon/gpu-algos/README.md"
+Repository = "https://github.com/herlegon/gpu-algos"
+"Bug Tracker" = "https://github.com/herlegon/gpu-algos/issues"
+
+[build-system]
+requires = ["setuptools >= 84.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gpu_algos*"]
+exclude = ["tests*"]
+
+[tool.black]
+line-length = 90
+target-version = ['py314']
+
+[tool.mypy]
+python_version = "3.14"
+warn_return_any = true
+warn_unused_configs = true

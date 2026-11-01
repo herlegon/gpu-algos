@@ -3,7 +3,7 @@ import queue
 from queue import Queue
 import time
 
-from darker_thinner_lines import DarkerThinnerLines
+from gpu_algos.darker_thinner_lines import DarkerThinnerLines
 from hytils import lightgreen
 
 import torch
